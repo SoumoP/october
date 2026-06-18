@@ -31,6 +31,13 @@ public class PageFetcher {
         try {
             Document doc = Jsoup.connect(url)
                     .userAgent(userAgent)
+                    .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    // Note: deliberately NOT advertising "br" (brotli) — Jsoup decodes
+                    // only gzip/deflate, and servers (e.g. Razorpay behind Cloudflare)
+                    // will gladly hand us brotli-encoded gibberish if we ask for it.
+                    .header("Accept-Encoding", "gzip, deflate")
+                    .header("Upgrade-Insecure-Requests", "1")
                     .timeout(timeoutMs)
                     .followRedirects(true)
                     .ignoreContentType(false)

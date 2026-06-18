@@ -28,7 +28,21 @@ jobs:
           java-version: '21'
           cache: maven
 
+      # Persist the H2 detection state between runs. On cache miss the
+      # pipeline does a full cold detection (fine, just slower); on cache
+      # hit, only still-UNKNOWN companies trigger Brave queries.
+      - name: Restore October DB cache
+        id: db-cache
+        uses: actions/cache@v4
+        with:
+          path: data/october.mv.db
+          key: october-db-${{ github.run_id }}
+          restore-keys: |
+            october-db-
+
       - name: Run October pipeline
+        env:
+          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
         run: mvn -B -q -DskipTests spring-boot:run
 
       - name: Verify CSV was produced

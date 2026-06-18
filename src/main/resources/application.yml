@@ -21,7 +21,15 @@ october:
   export-path: ./exports/october.csv
   http:
     timeout-ms: 15000
-    user-agent: "October/0.1 (+https://github.com/soumyajit-podder/october)"
+    # Browser-like UA so that soft anti-bot filters (e.g. Cloudflare default
+    # mode, Meesho's careers page) stop returning HTTP 403. Not stealth — just
+    # not screaming "I'm a script".
+    user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  search:
+    brave:
+      # Read from env var BRAVE_SEARCH_API_KEY; empty by default → search-based
+      # detection becomes a graceful no-op (logged at startup).
+      api-key: ${BRAVE_SEARCH_API_KEY:}
   skip:
     discovery: false
     detection: false

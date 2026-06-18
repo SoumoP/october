@@ -19,6 +19,7 @@ import java.util.Optional;
 public class AtsDetectionService {
 
     private final List<AtsDetector> detectors;
+    private final SearchBasedDetector searchBasedDetector;
     private final CompanyRepository companyRepository;
 
     @Transactional
@@ -27,6 +28,7 @@ public class AtsDetectionService {
         int resolved = 0;
         int alreadyResolved = 0;
         int unresolved = 0;
+        int viaSearch = 0;
 
         for (Company c : all) {
             if (c.getAtsType() != null && c.getAtsType() != AtsType.UNKNOWN && c.getAtsIdentifier() != null) {
@@ -34,6 +36,14 @@ public class AtsDetectionService {
                 continue;
             }
             Optional<AtsDetection> detection = detect(c);
+            boolean fromSearch = false;
+            if (detection.isEmpty() || !detection.get().isResolved()) {
+                Optional<AtsDetection> searchDetection = searchBasedDetector.detect(c);
+                if (searchDetection.isPresent() && searchDetection.get().isResolved()) {
+                    detection = searchDetection;
+                    fromSearch = true;
+                }
+            }
             if (detection.isPresent() && detection.get().isResolved()) {
                 AtsDetection d = detection.get();
                 c.setAtsType(d.atsType());
@@ -43,7 +53,9 @@ public class AtsDetectionService {
                 }
                 companyRepository.save(c);
                 resolved++;
-                log.info("Detected {}={} for {}", d.atsType(), d.identifier(), c.getName());
+                if (fromSearch) viaSearch++;
+                log.info("Detected {}={} for {}{}", d.atsType(), d.identifier(), c.getName(),
+                        fromSearch ? " (via search)" : "");
             } else {
                 c.setAtsType(AtsType.UNKNOWN);
                 companyRepository.save(c);
@@ -52,6 +64,7 @@ public class AtsDetectionService {
             }
         }
 
+        log.info("[detection] search-based fallback resolved {} of {} newly-resolved companies", viaSearch, resolved);
         return new DetectionResult(all.size(), resolved, alreadyResolved, unresolved, breakdown(all));
     }
 

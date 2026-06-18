@@ -56,4 +56,9 @@ public abstract class AbstractAtsDetector implements AtsDetector {
     protected abstract Optional<String> extractFromUrl(String url);
 
     protected abstract Optional<String> extractFromDocument(Document document);
+
+    @Override
+    public final Optional<String> extractIdentifierFromUrl(String url) {
+        return extractFromUrl(url);
+    }
 }
