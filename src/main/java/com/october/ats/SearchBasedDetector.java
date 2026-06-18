@@ -2,7 +2,7 @@ package com.october.ats;
 
 import com.october.model.AtsDetection;
 import com.october.model.Company;
-import com.october.search.BraveSearchClient;
+import com.october.search.TavilySearchClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -25,24 +25,24 @@ public class SearchBasedDetector {
 
     private static final int RESULT_LIMIT = 10;
 
-    private final BraveSearchClient brave;
+    private final TavilySearchClient tavily;
     private final List<AtsDetector> detectors;
 
-    public SearchBasedDetector(BraveSearchClient brave, List<AtsDetector> detectors) {
-        this.brave = brave;
+    public SearchBasedDetector(TavilySearchClient tavily, List<AtsDetector> detectors) {
+        this.tavily = tavily;
         this.detectors = detectors;
     }
 
     public boolean isEnabled() {
-        return brave.isEnabled();
+        return tavily.isEnabled();
     }
 
     public Optional<AtsDetection> detect(Company company) {
-        if (!brave.isEnabled()) return Optional.empty();
+        if (!tavily.isEnabled()) return Optional.empty();
         String query = "\"" + company.getName() + "\" careers";
-        List<BraveSearchClient.SearchResult> results = brave.search(query, RESULT_LIMIT);
-        log.info("Brave returned {} results for {}", results.size(), query);
-        for (BraveSearchClient.SearchResult r : results) {
+        List<TavilySearchClient.SearchResult> results = tavily.search(query, RESULT_LIMIT);
+        log.info("Tavily returned {} results for {}", results.size(), query);
+        for (TavilySearchClient.SearchResult r : results) {
             if (r.url == null || r.url.isBlank()) continue;
             for (AtsDetector d : detectors) {
                 Optional<String> id = d.extractIdentifierFromUrl(r.url);

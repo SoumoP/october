@@ -26,10 +26,10 @@ october:
     # not screaming "I'm a script".
     user-agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
   search:
-    brave:
-      # Read from env var BRAVE_SEARCH_API_KEY; empty by default → search-based
+    tavily:
+      # Read from env var TAVILY_API_KEY; empty by default → search-based
       # detection becomes a graceful no-op (logged at startup).
-      api-key: ${BRAVE_SEARCH_API_KEY:}
+      api-key: ${TAVILY_API_KEY:}
   skip:
     discovery: false
     detection: false

@@ -4,6 +4,8 @@
 **Status:** Approved; implementing
 **Predecessor:** Phase 1 (Signal) shipped 2026-06-18 with 3/21 companies detected (~14%). Match brainstorm parked at `docs/superpowers/specs/2026-06-18-october-match-design.md` until this lands.
 
+**Update 2026-06-18 (later same day):** Original spec used **Brave Search API**. Brave's free tier was removed mid-day; switched provider to **Tavily Search API** (1,000 queries/month free, single API key, same architectural shape). All references to Brave in the sections below should be read as Tavily — the design is unchanged otherwise. Env var: `TAVILY_API_KEY`. Config key: `october.search.tavily.api-key`. POST endpoint: `https://api.tavily.com/search` with `{api_key, query, search_depth: "basic", max_results}`.
+
 ---
 
 ## Problem
