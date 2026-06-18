@@ -35,8 +35,8 @@ public class OctoberPipeline implements ApplicationRunner {
         } else {
             log.info("[discovery] running...");
             var d = discoveryService.discoverAndPersist();
-            log.info("[discovery] candidates={}, newlyAdded={}, totalPersisted={}",
-                    d.candidates(), d.newlyAdded(), d.totalPersisted());
+            log.info("[discovery] candidates={}, newlyAdded={}, removed={}, totalPersisted={}",
+                    d.candidates(), d.newlyAdded(), d.removed(), d.totalPersisted());
         }
 
         if (skipDetection || args.containsOption("skip-detection")) {

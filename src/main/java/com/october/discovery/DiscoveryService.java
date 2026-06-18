@@ -2,6 +2,7 @@ package com.october.discovery;
 
 import com.october.model.Company;
 import com.october.persistence.CompanyRepository;
+import com.october.persistence.JobRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class DiscoveryService {
 
     private final List<CompanyDiscoverySource> sources;
     private final CompanyRepository companyRepository;
+    private final JobRepository jobRepository;
 
     @Transactional
     public DiscoveryResult discoverAndPersist() {
@@ -49,10 +51,29 @@ public class DiscoveryService {
             }
         }
 
+        int removed = 0;
+        if (!dedup.isEmpty()) {
+            // Companies persisted in the DB but no longer present in any discovery
+            // source are removed along with their jobs. Guarded by the non-empty
+            // check above so a transient empty-source result (e.g. seed-file parse
+            // error) can never wipe the database.
+            for (Company existing : companyRepository.findAllByOrderByNameAsc()) {
+                if (!dedup.containsKey(existing.getWebsite())) {
+                    jobRepository.deleteByCompanyId(existing.getId());
+                    companyRepository.delete(existing);
+                    removed++;
+                    log.info("Removed {} — no longer in any discovery source", existing.getName());
+                }
+            }
+        } else {
+            log.warn("Discovery returned 0 companies across all sources — skipping deletion pass to avoid wiping the database.");
+        }
+
         long total = companyRepository.count();
-        log.info("Discovery complete: {} new companies, {} total persisted.", newlyAdded, total);
-        return new DiscoveryResult(dedup.size(), newlyAdded, total);
+        log.info("Discovery complete: {} candidates, {} new, {} removed, {} total persisted.",
+                dedup.size(), newlyAdded, removed, total);
+        return new DiscoveryResult(dedup.size(), newlyAdded, removed, total);
     }
 
-    public record DiscoveryResult(int candidates, int newlyAdded, long totalPersisted) { }
+    public record DiscoveryResult(int candidates, int newlyAdded, int removed, long totalPersisted) { }
 }
