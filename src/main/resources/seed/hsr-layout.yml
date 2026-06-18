@@ -87,3 +87,10 @@ companies:
   - name: Sirion
     website: https://www.sirion.ai
     careers_url: https://www.sirion.ai/careers
+
+  # Workday test entry — NVIDIA's Bangalore office uses Workday. Keeps the
+  # Workday detector exercised. Remove if you want the seed strictly HSR
+  # Layout startups.
+  - name: NVIDIA
+    website: https://www.nvidia.com
+    careers_url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite

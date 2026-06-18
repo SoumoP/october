@@ -4,5 +4,6 @@ public enum AtsType {
     LEVER,
     GREENHOUSE,
     ASHBY,
+    WORKDAY,
     UNKNOWN
 }
