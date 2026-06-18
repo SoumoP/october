@@ -1,0 +1,57 @@
+name: October pipeline
+
+on:
+  schedule:
+    - cron: '17 */4 * * *'   # every 4 hours at :17 UTC (off the round mark)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: october-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run October pipeline
+        run: mvn -B -q -DskipTests spring-boot:run
+
+      - name: Verify CSV was produced
+        run: |
+          if [ ! -s exports/october.csv ]; then
+            echo "::error::Pipeline did not produce exports/october.csv"
+            exit 1
+          fi
+          echo "Rows: $(wc -l < exports/october.csv)"
+
+      - name: Stage docs payload for gh-pages
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/index.html
+          cp exports/october.csv _site/october.csv
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'refresh october data'
+          force_orphan: true

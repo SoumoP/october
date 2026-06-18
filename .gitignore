@@ -16,6 +16,7 @@ data/*.trace.db
 data/*.lock.db
 
 exports/*.csv
+docs/october.csv
 
 !data/.gitkeep
 !exports/.gitkeep
