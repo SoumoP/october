@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: october
+  main:
+    web-application-type: none
+  datasource:
+    url: jdbc:h2:file:./data/october;AUTO_SERVER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+
+october:
+  seed-resource: classpath:seed/hsr-layout.yml
+  export-path: ./exports/october.csv
+  http:
+    timeout-ms: 15000
+    user-agent: "October/0.1 (+https://github.com/soumyajit-podder/october)"
+  skip:
+    discovery: false
+    detection: false
+    fetch: false
+    export: false
+
+logging:
+  level:
+    root: INFO
+    com.october: INFO
+    org.hibernate.SQL: WARN

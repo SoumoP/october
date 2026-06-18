@@ -1,0 +1,89 @@
+# Seed list of startups associated with HSR Layout, Bangalore.
+# Add/remove freely — DiscoveryService dedupes by website.
+#
+# Schema per entry:
+#   name:         display name
+#   website:      canonical homepage (no trailing slash). Used as the unique key.
+#   careers_url:  (optional) direct careers URL if known; otherwise leave blank
+#                 and ATS detection will probe common patterns.
+
+companies:
+  - name: Meesho
+    website: https://www.meesho.io
+    careers_url: https://www.meesho.io/careers
+
+  - name: Swiggy
+    website: https://www.swiggy.com
+    careers_url: https://careers.swiggy.com
+
+  - name: Razorpay
+    website: https://razorpay.com
+    careers_url: https://razorpay.com/jobs
+
+  - name: Atlan
+    website: https://atlan.com
+    careers_url: https://atlan.com/careers
+
+  - name: Hasura
+    website: https://hasura.io
+    careers_url: https://hasura.io/careers
+
+  - name: Postman
+    website: https://www.postman.com
+    careers_url: https://www.postman.com/company/careers
+
+  - name: Zerodha
+    website: https://zerodha.com
+    careers_url: https://zerodha.com/careers
+
+  - name: Pixxel
+    website: https://www.pixxel.space
+    careers_url: https://www.pixxel.space/careers
+
+  - name: Cred
+    website: https://cred.club
+    careers_url: https://careers.cred.club
+
+  - name: Skydo
+    website: https://www.skydo.com
+    careers_url: https://www.skydo.com/careers
+
+  - name: Fi Money
+    website: https://fi.money
+    careers_url: https://fi.money/careers
+
+  - name: Pepper Content
+    website: https://www.peppercontent.io
+    careers_url: https://www.peppercontent.io/careers
+
+  - name: Velocity
+    website: https://www.velocity.in
+    careers_url: https://www.velocity.in/careers
+
+  - name: Hyperface
+    website: https://www.hyperface.co
+    careers_url: https://www.hyperface.co/careers
+
+  - name: Springworks
+    website: https://www.springworks.in
+    careers_url: https://www.springworks.in/careers
+
+  - name: Toplyne
+    website: https://www.toplyne.io
+    careers_url: https://www.toplyne.io/careers
+
+  - name: Slintel
+    website: https://www.slintel.com
+    careers_url: https://www.slintel.com/careers
+
+  - name: Zluri
+    website: https://www.zluri.com
+    careers_url: https://www.zluri.com/careers
+
+  - name: Inai
+    website: https://inai.io
+    careers_url: https://inai.io/careers
+
+  - name: Sirion
+    website: https://www.sirion.ai
+    careers_url: https://www.sirion.ai/careers
