@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>October — HSR Layout job board</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <style>
+    :root {
+      --bg: #0e1116;
+      --panel: #161b22;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 24px 32px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0 0 4px; font-size: 22px; font-weight: 600; }
+    .subtitle { color: var(--muted); font-size: 13px; }
+    .subtitle a { color: var(--accent); text-decoration: none; }
+    .subtitle a:hover { text-decoration: underline; }
+
+    .stats {
+      display: flex;
+      gap: 32px;
+      padding: 16px 32px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-value { font-size: 20px; font-weight: 600; }
+    .stat-label { font-size: 12px; color: var(--muted); }
+
+    .controls {
+      padding: 16px 32px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .controls input[type="search"] {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      width: 280px;
+    }
+    .controls input[type="search"]:focus { outline: none; border-color: var(--accent); }
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      user-select: none;
+    }
+    .chip.active { color: var(--text); border-color: var(--accent); }
+    .chip:hover { color: var(--text); }
+    .chip .chip-count { color: var(--muted); margin-left: 4px; font-weight: 400; }
+    .chip.active .chip-count { color: var(--text); }
+
+    main { padding: 0 32px 48px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th {
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    th:hover { color: var(--text); }
+    th .arrow { color: var(--accent); margin-left: 4px; }
+
+    tr:hover td { background: rgba(88, 166, 255, 0.04); }
+
+    .company { font-weight: 600; }
+    .website a { color: var(--accent); text-decoration: none; font-size: 12px; }
+    .website a:hover { text-decoration: underline; }
+
+    .ats-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .job-count { font-weight: 600; color: var(--text); }
+    .job-count.zero { color: var(--muted); font-weight: 400; }
+
+    details summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 12px;
+      list-style: none;
+    }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before {
+      content: "▸ ";
+      display: inline-block;
+      transition: transform 0.15s;
+    }
+    details[open] summary::before { content: "▾ "; }
+    details ul {
+      margin: 6px 0 0;
+      padding: 0 0 0 16px;
+      list-style: none;
+    }
+    details li {
+      padding: 3px 0;
+      color: var(--text);
+      font-size: 13px;
+    }
+    details li::before {
+      content: "•";
+      color: var(--muted);
+      margin-right: 8px;
+    }
+
+    .empty {
+      padding: 48px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .loading { padding: 48px; text-align: center; color: var(--muted); }
+    .error { padding: 24px 32px; color: #ff7b72; }
+    footer {
+      padding: 24px 32px;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>October</h1>
+    <div class="subtitle">
+      HSR Layout startup hiring signals · refreshed every 4 hours ·
+      <a href="https://github.com/SoumoP/october" target="_blank" rel="noopener">source</a>
+    </div>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="controls">
+    <input type="search" id="search" placeholder="Search company, title, location…" autocomplete="off" />
+    <div class="filter-chips" id="filters"></div>
+    <span id="resultCount" style="margin-left:auto;color:var(--muted);font-size:12px;"></span>
+  </section>
+
+  <main>
+    <div id="table-container">
+      <div class="loading">Loading october.csv…</div>
+    </div>
+  </main>
+
+  <footer>
+    Built with the October pipeline · <span id="lastUpdated"></span>
+  </footer>
+
+  <script>
+    const state = {
+      rows: [],
+      search: "",
+      atsFilter: "ALL",
+      sortKey: "job_count",
+      sortDir: "desc",
+    };
+
+    // Canonical ordering for ATS types we've already curated colors for.
+    // Anything else gets a deterministic hash-derived hue, so a new ATS the
+    // pipeline emits never lands as un-styled white text.
+    const ATS_CANONICAL_ORDER = ["LEVER", "GREENHOUSE", "ASHBY", "WORKDAY"];
+    const ATS_KNOWN_HUE = {
+      LEVER: 20,        // warm orange
+      GREENHOUSE: 130,  // green
+      ASHBY: 280,       // purple
+      WORKDAY: 200,     // cyan-blue
+    };
+
+    function hashHue(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+      // Avoid muddy yellows around 50-70 so labels stay legible on dark bg.
+      const raw = Math.abs(h) % 320;
+      return raw >= 50 ? raw + 30 : raw;
+    }
+
+    function atsStyle(ats) {
+      const t = (ats || "UNKNOWN").toUpperCase();
+      if (t === "UNKNOWN") {
+        return { fg: "var(--muted)", bg: "rgba(110, 118, 129, 0.15)" };
+      }
+      const hue = ATS_KNOWN_HUE[t] ?? hashHue(t);
+      return {
+        fg: `hsl(${hue}, 70%, 72%)`,
+        bg: `hsla(${hue}, 70%, 72%, 0.15)`,
+      };
+    }
+
+    function discoveredAtsTypes() {
+      const counts = new Map();
+      for (const r of state.rows) {
+        const t = (r.ats_type || "UNKNOWN").toUpperCase();
+        counts.set(t, (counts.get(t) || 0) + 1);
+      }
+      // Canonical types first (only if present), then alphabetical new ones,
+      // UNKNOWN always last so it doesn't dominate the visual rhythm.
+      const present = new Set(counts.keys());
+      const known = ATS_CANONICAL_ORDER.filter(t => present.has(t));
+      const unknownLast = present.has("UNKNOWN");
+      const others = [...present]
+        .filter(t => !ATS_CANONICAL_ORDER.includes(t) && t !== "UNKNOWN")
+        .sort();
+      const ordered = [...known, ...others];
+      if (unknownLast) ordered.push("UNKNOWN");
+      return ordered.map(t => ({ type: t, count: counts.get(t) }));
+    }
+
+    function parseJobs(jobsCell) {
+      if (!jobsCell) return [];
+      return jobsCell.split(";").map(s => s.trim()).filter(Boolean);
+    }
+
+    function renderStats() {
+      const total = state.rows.length;
+      let totalJobs = 0;
+      for (const r of state.rows) totalJobs += Number(r.job_count || 0);
+      const types = discoveredAtsTypes();
+      const typeStats = types.map(({ type, count }) => {
+        const label = type === "UNKNOWN" ? "unresolved" : type.charAt(0) + type.slice(1).toLowerCase();
+        return `<div class="stat"><div class="stat-value">${count}</div><div class="stat-label">${label}</div></div>`;
+      }).join("");
+      document.getElementById("stats").innerHTML = `
+        <div class="stat"><div class="stat-value">${total}</div><div class="stat-label">companies</div></div>
+        <div class="stat"><div class="stat-value">${totalJobs}</div><div class="stat-label">open jobs</div></div>
+        ${typeStats}
+      `;
+    }
+
+    function renderFilters() {
+      const types = discoveredAtsTypes();
+      const chips = [{ type: "ALL", count: state.rows.length }, ...types];
+      document.getElementById("filters").innerHTML = chips.map(({ type, count }) =>
+        `<span class="chip${state.atsFilter === type ? " active" : ""}" data-ats="${type}">${type}<span class="chip-count">${count}</span></span>`
+      ).join("");
+      document.querySelectorAll("#filters .chip").forEach(chip => {
+        chip.addEventListener("click", () => {
+          state.atsFilter = chip.dataset.ats;
+          renderFilters();
+          renderTable();
+        });
+      });
+    }
+
+    function filteredRows() {
+      const q = state.search.toLowerCase();
+      return state.rows.filter(r => {
+        const ats = (r.ats_type || "UNKNOWN").toUpperCase();
+        if (state.atsFilter !== "ALL" && ats !== state.atsFilter) return false;
+        if (!q) return true;
+        const haystack = [
+          r.company_name, r.website, r.ats_type, r.ats_identifier, r.jobs
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    function sortRows(rows) {
+      const k = state.sortKey;
+      const dir = state.sortDir === "asc" ? 1 : -1;
+      return [...rows].sort((a, b) => {
+        let av = a[k], bv = b[k];
+        if (k === "job_count") { av = Number(av || 0); bv = Number(bv || 0); }
+        else { av = (av || "").toString().toLowerCase(); bv = (bv || "").toString().toLowerCase(); }
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+    }
+
+    function renderTable() {
+      const rows = sortRows(filteredRows());
+      document.getElementById("resultCount").textContent =
+        `${rows.length} of ${state.rows.length} companies`;
+
+      if (rows.length === 0) {
+        document.getElementById("table-container").innerHTML =
+          `<div class="empty">No companies match these filters.</div>`;
+        return;
+      }
+
+      const cols = [
+        { key: "company_name", label: "Company" },
+        { key: "ats_type",     label: "ATS" },
+        { key: "job_count",    label: "Jobs" },
+        { key: "ats_identifier", label: "Identifier" },
+        { key: "jobs",         label: "Open positions" },
+      ];
+
+      const arrow = (key) =>
+        state.sortKey === key ? `<span class="arrow">${state.sortDir === "asc" ? "↑" : "↓"}</span>` : "";
+
+      const header = cols.map(c => `<th data-key="${c.key}">${c.label}${arrow(c.key)}</th>`).join("");
+      const body = rows.map(r => {
+        const jobs = parseJobs(r.jobs);
+        const jobsCell = jobs.length === 0
+          ? `<span style="color:var(--muted)">—</span>`
+          : `<details><summary>${jobs.length} open</summary><ul>${jobs.map(j => `<li>${escapeHtml(j)}</li>`).join("")}</ul></details>`;
+        const ats = (r.ats_type || "UNKNOWN").toUpperCase();
+        const { fg, bg } = atsStyle(ats);
+        return `
+          <tr>
+            <td>
+              <div class="company">${escapeHtml(r.company_name)}</div>
+              <div class="website"><a href="${escapeAttr(r.website)}" target="_blank" rel="noopener">${escapeHtml(r.website)}</a></div>
+            </td>
+            <td><span class="ats-tag" style="color:${fg};background:${bg}">${escapeHtml(ats)}</span></td>
+            <td><span class="job-count${Number(r.job_count) === 0 ? ' zero' : ''}">${escapeHtml(r.job_count || '0')}</span></td>
+            <td style="color:var(--muted);font-family:ui-monospace,monospace;font-size:12px;">${escapeHtml(r.ats_identifier || '—')}</td>
+            <td>${jobsCell}</td>
+          </tr>`;
+      }).join("");
+
+      document.getElementById("table-container").innerHTML =
+        `<table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table>`;
+
+      document.querySelectorAll("th[data-key]").forEach(th => {
+        th.addEventListener("click", () => {
+          const k = th.dataset.key;
+          if (state.sortKey === k) state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+          else { state.sortKey = k; state.sortDir = k === "job_count" ? "desc" : "asc"; }
+          renderTable();
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/`/g, "&#96;"); }
+
+    function start() {
+      Papa.parse("october.csv", {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (res) => {
+          state.rows = res.data;
+          renderStats();
+          renderFilters();
+          renderTable();
+        },
+        error: (err) => {
+          document.getElementById("table-container").innerHTML =
+            `<div class="error">Failed to load october.csv — ${escapeHtml(err.message || err)}</div>`;
+        }
+      });
+
+      fetch("october.csv", { method: "HEAD" })
+        .then(r => {
+          const lm = r.headers.get("Last-Modified");
+          if (lm) document.getElementById("lastUpdated").textContent = `last updated ${new Date(lm).toLocaleString()}`;
+        })
+        .catch(() => {});
+
+      document.getElementById("search").addEventListener("input", (e) => {
+        state.search = e.target.value;
+        renderTable();
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof Papa === "undefined") {
+          window.addEventListener("load", start);
+        } else start();
+      });
+    } else {
+      if (typeof Papa === "undefined") window.addEventListener("load", start);
+      else start();
+    }
+  </script>
+</body>
+</html>
